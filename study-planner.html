@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>منظّم المذاكرة | Raheek Hatem</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;padding:18px;font-family:Arial,sans-serif;
+  background:#f7f2ff;color:#30213c
+}
+header{text-align:center;padding:20px 0}
+header h1{color:#702bc2}
+header p{color:#786a83;line-height:1.8}
+main{max-width:760px;margin:auto}
+.panel{
+  background:white;padding:19px;border-radius:20px;
+  margin:17px 0;box-shadow:0 3px 15px #56228b12
+}
+h2{font-size:20px}
+input,select,button{
+  font:inherit;padding:12px;border-radius:11px;
+  max-width:100%
+}
+input,select{
+  width:100%;border:1px solid #ded0ee;
+  background:white;color:#30213c;margin:6px 0 12px
+}
+button{border:0;background:#702bc2;color:white;cursor:pointer}
+button:active{opacity:.8}
+.full{width:100%}
+.fields{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px
+}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{
+  background:#f4eaff;padding:15px;border-radius:14px;
+  text-align:center
+}
+.stat strong{display:block;color:#702bc2;font-size:24px;margin-top:7px}
+.progress{
+  height:12px;background:#eadcf7;border-radius:20px;
+  overflow:hidden;margin:14px 0
+}
+#progressBar{
+  height:100%;width:0;background:#702bc2;
+  transition:width .2s
+}
+.week{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px
+}
+.day{
+  background:#f1e7fc;color:#6226a5;padding:9px 2px;
+  font-size:13px
+}
+.day.active{background:#702bc2;color:white}
+.task{
+  padding:12px 0;border-bottom:1px solid #eee;
+  display:flex;align-items:flex-start;gap:9px
+}
+.task input[type=checkbox]{width:auto;margin:4px 0}
+.task-info{flex:1;min-width:0}
+.task-info strong{overflow-wrap:anywhere}
+.meta{font-size:13px;color:#80718c;line-height:1.8;margin-top:5px}
+.done{text-decoration:line-through;color:#988ca0}
+.small{font-size:13px;padding:8px}
+.delete{background:#f1e7fc;color:#6424a5}
+.empty{color:#8a7b95;text-align:center;padding:15px}
+.back{display:inline-block;color:#702bc2;margin:15px 0}
+@media(max-width:420px){
+  .fields{grid-template-columns:1fr}
+  body{padding:12px}
+  .panel{padding:14px}
+  .week{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 منظّم المذاكرة</h1>
+  <p>خططي لأسبوعك، نظّمي موادك، وتابعي إنجازك خطوة بخطوة ✨</p>
+</header>
+
+<main>
+<section class="panel">
+  <h2>📊 إنجازي الدراسي</h2>
+  <div class="stats">
+    <div class="stat">إجمالي المهام<strong id="total">0</strong></div>
+    <div class="stat">المهام المكتملة<strong id="completed">0</strong></div>
+  </div>
+  <div class="progress"><div id="progressBar"></div></div>
+  <strong id="progressText">نسبة الإنجاز: 0%</strong>
+</section>
+
+<section class="panel">
+  <h2>📘 موادي الدراسية</h2>
+  <form id="subjectForm">
+    <input id="subjectName" placeholder="اسم المادة، مثل البرمجة" required>
+    <button class="full" type="submit">＋ إضافة مادة</button>
+  </form>
+  <div id="subjectsList"></div>
+</section>
+
+<section class="panel">
+  <h2>✍️ إضافة مهمة جديدة</h2>
+  <form id="taskForm">
+    <label for="taskName">اسم المهمة</label>
+    <input id="taskName" placeholder="مثال: مذاكرة المحاضرة الأولى" required>
+
+    <label for="taskSubject">المادة الدراسية</label>
+    <select id="taskSubject">
+      <option value="">بدون تصنيف</option>
+    </select>
+
+    <div class="fields">
+      <div>
+        <label for="taskDay">يوم المذاكرة</label>
+        <select id="taskDay">
+          <option value="السبت">السبت</option>
+          <option value="الأحد">الأحد</option>
+          <option value="الاثنين">الاثنين</option>
+          <option value="الثلاثاء">الثلاثاء</option>
+          <option value="الأربعاء">الأربعاء</option>
+          <option value="الخميس">الخميس</option>
+          <option value="الجمعة">الجمعة</option>
+        </select>
+      </div>
+      <div>
+        <label for="taskDate">التاريخ</label>
+        <input id="taskDate" type="date">
+      </div>
+      <div>
+        <label for="taskTime">الوقت</label>
+        <input id="taskTime" type="time">
+      </div>
+    </div>
+    <button class="full" type="submit">＋ إضافة المهمة</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>🗓️ جدولي الأسبوعي</h2>
+  <p class="meta">اختاري يومًا لعرض مهامه.</p>
+  <div class="week" id="weekButtons"></div>
+  <div id="dayHeading"></div>
+  <div id="tasksList"></div>
+  <p class="empty" id="empty">لا توجد مهام لهذا اليوم حتى الآن.</p>
+  <button class="delete small" id="showAll" type="button">عرض كل المهام</button>
+  <button class="delete small" id="clearDone" type="button">حذف المهام المكتملة</button>
+</section>
+
+<a class="back" href="index.html">← العودة إلى موقعي الشخصي</a>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const days = [
+  'السبت','الأحد','الاثنين','الثلاثاء',
+  'الأربعاء','الخميس','الجمعة'
+];
+
+function read(key, fallback){
+  try{
+    const value = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(value) ? value : fallback;
+  }catch(e){return fallback}
+}
+
+let subjects = read('rh_subjects', []);
+let tasks = read('rh_tasks', []).map(t => ({
+  ...t,
+  name: t.name || '',
+  done: Boolean(t.done),
+  subject: t.subject || '',
+  day: t.day || 'السبت',
+  date: t.date || '',
+  time: t.time || ''
+}));
+let selectedDay = days[new Date().getDay() === 6 ? 0 : new Date().getDay() + 1];
+
+function save(){
+  localStorage.setItem('rh_subjects', JSON.stringify(subjects));
+  localStorage.setItem('rh_tasks', JSON.stringify(tasks));
+}
+
+function renderSubjects(){
+  const list = $('subjectsList');
+  const select = $('taskSubject');
+  const oldValue = select.value;
+  list.replaceChildren();
+  select.replaceChildren();
+
+  const option = document.createElement('option');
+  option.value = '';
+  option.textContent = 'بدون تصنيف';
+  select.append(option);
+
+  subjects.forEach((subject,index)=>{
+    const opt = document.createElement('option');
+    opt.value = subject;
+    opt.textContent = subject;
+    select.append(opt);
+
+    const row = document.createElement('div');
+    row.className = 'task';
+    const name = document.createElement('span');
+    name.className = 'task-info';
+    name.textContent = subject;
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'delete small';
+    del.textContent = 'حذف';
+    del.onclick = ()=>{
+      if(tasks.some(t=>t.subject===subject)){
+        alert('انقلي مهام المادة لتصنيف آخر قبل حذفها.');
+        return;
+      }
+      subjects.splice(index,1);
+      save();
+      renderSubjects();
+    };
+    row.append(name,del);
+    list.append(row);
+  });
+
+  if(!subjects.length){
+    list.textContent = 'أضيفي موادك حتى تصنّفي المهام.';
+  }
+  if(subjects.includes(oldValue)) select.value = oldValue;
+}
+
+function renderWeek(){
+  const box = $('weekButtons');
+  box.replaceChildren();
+  days.forEach(day=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day' + (selectedDay===day?' active':'');
+    btn.textContent = day;
+    btn.onclick = ()=>{
+      selectedDay = day;
+      renderWeek();
+      renderTasks();
+    };
+    box.append(btn);
+  });
+}
+
+function renderTasks(){
+  const list = $('tasksList');
+  list.replaceChildren();
+
+  const visible = selectedDay
+    ? tasks.filter(t=>t.day===selectedDay)
+    : tasks;
+
+  $('dayHeading').textContent = selectedDay
+    ? 'مهام يوم ' + selectedDay : 'كل مهام الأسبوع';
+
+  $('empty').style.display = visible.length ? 'none':'block';
+
+  visible.forEach(task=>{
+    const index = tasks.indexOf(task);
+    const row = document.createElement('div');
+    row.className = 'task';
+
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.checked = task.done;
+    check.setAttribute('aria-label','إنجاز المهمة');
+    check.onchange = ()=>{
+      task.done = check.checked;
+      save();
+      renderTasks();
+    };
+
+    const info = document.createElement('div');
+    info.className = 'task-info';
+
+    const title = document.createElement('strong');
+    title.textContent = task.name;
+    if(task.done) title.className = 'done';
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const details = [];
+    details.push('📘 ' + (task.subject || 'بدون تصنيف'));
+    details.push('🗓️ ' + task.day);
+    if(task.date) details.push('📅 ' + task.date);
+    if(task.time) details.push('⏰ ' + task.time);
+    meta.textContent = details.join(' • ');
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'delete small';
+    del.textContent = 'حذف';
+    del.onclick = ()=>{
+      tasks.splice(index,1);
+      save();
+      renderTasks();
+    };
+
+    info.append(title,meta);
+    row.append(check,info,del);
+    list.append(row);
+  });
+
+  const completed = tasks.filter(t=>t.done).length;
+  const percent = tasks.length
+    ? Math.round(completed/tasks.length*100) : 0;
+
+  $('total').textContent = tasks.length;
+  $('completed').textContent = completed;
+  $('progressText').textContent = 'نسبة الإنجاز: ' + percent + '%';
+  $('progressBar').style.width = percent + '%';
+}
+
+$('subjectForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const value = $('subjectName').value.trim();
+  if(!value) return;
+  if(subjects.includes(value)){
+    alert('المادة دي موجودة بالفعل.');
+    return;
+  }
+  subjects.push(value);
+  save();
+  renderSubjects();
+  e.target.reset();
+});
+
+$('taskForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const name = $('taskName').value.trim();
+  if(!name) return;
+
+  tasks.push({
+    name,
+    subject: $('taskSubject').value,
+    day: $('taskDay').value,
+    date: $('taskDate').value,
+    time: $('taskTime').value,
+    done: false
+  });
+
+  selectedDay = $('taskDay').value;
+  save();
+  renderWeek();
+  renderTasks();
+  e.target.reset();
+});
+
+$('showAll').onclick = ()=>{
+  selectedDay = null;
+  renderWeek();
+  renderTasks();
+};
+
+$('clearDone').onclick = ()=>{
+  if(!tasks.some(t=>t.done)) return;
+  if(confirm('هل تريدين حذف جميع المهام المكتملة؟')){
+    tasks = tasks.filter(t=>!t.done);
+    save();
+    renderTasks();
+  }
+};
+
+renderSubjects();
+renderWeek();
+renderTasks();
+</script>
+</body>
+</html>
